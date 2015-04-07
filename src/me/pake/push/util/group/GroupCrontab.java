@@ -198,17 +198,17 @@ public class GroupCrontab {
 					
 					// 更改房间属性
 					int sameModuleID = Integer.parseInt(sameModule.get("id"));
-					String sql = "update standard_group_module set trade_no = '" + trade_no + "', have_people = " + (havePeople+sameHavePeople) + " where id = " + sameModuleID;
+					String sql = "update standard_group_module set have_people = " + (havePeople+sameHavePeople) + " where id = " + sameModuleID;
 					Log.record("[GROUP CRONTAB] 更改房间属性sql" + sql, Log.INFO);
 					SGM.save(sql);
 					
 					// 更改订单状态
-					sql = "update standard_group_bill set status = " + StandardGroupBill.STATUS_APPLYING + " where id = " + Integer.parseInt(bill.get("id"));
+					sql = "update standard_group_bill set status = " + StandardGroupBill.STATUS_APPLYING + " , trade_no = '" + sameTradeNo + "' where id = " + Integer.parseInt(bill.get("id"));
 					Log.record("[GROUP CRONTAB] 更改订单状态 sql： " + sql, Log.INFO);
 					SGBI.save(sql);
 					
 					// 更改用户属性
-					sql =  "update standard_group_users set sgbi_id = 0 , trade_no = '" + trade_no + "' where trade_no = '" + trade_no + "' or trade_no = '" + sameTradeNo + "'";
+					sql =  "update standard_group_users set sgbi_id = 0 , trade_no = '" + sameTradeNo + "' where trade_no = '" + trade_no + "' or trade_no = '" + sameTradeNo + "'";
 					Log.record("[GROUP CRONTAB] 更改用户属性SQL:" + sql, Log.INFO);
 					SGBU.save(sql);
 					
@@ -222,21 +222,21 @@ public class GroupCrontab {
 					
 					// 更改房间属性
 					int sameModuleID = Integer.parseInt(sameModule.get("id"));
-					String sql = "update standard_group_module set have_people = 0 where id = " + sameModuleID;
+					String sql = "update standard_group_module set have_people = 0 , trade_no = '" + trade_no + "' where id = " + sameModuleID;
 					Log.record("[GROUP CRONTAB] 更改房间属性sql" + sql, Log.INFO);
 					SGM.save(sql);
 					
 					// 更改订单状态
 					String nowTimeString = sdf.format(new Date());
-					sql = "update standard_group_bill set status = 1 , create_time = '" + nowTimeString + "' where id = " + Integer.parseInt(bill.get("id"));
+					sql = "update standard_group_bill set status = 1 , create_time = '" + nowTimeString + "' , trade_no = '" + sameTradeNo + "' where id = " + Integer.parseInt(bill.get("id"));
 					Log.record("[GROUP CRONTAB] 更改订单状态 sql： " + sql, Log.INFO);
 					SGBI.save(sql);
 					
 					// 更改用户属性
-					sql =  "update standard_group_users set sgbi_id = " + Integer.parseInt(bill.get("id")) + " , trade_no = '" + trade_no + "' where trade_no = '" + sameTradeNo + "'";
+					sql =  "update standard_group_users set sgbi_id = " + Integer.parseInt(bill.get("id")) + ", trade_no = '" + sameTradeNo + "' where trade_no = '" + sameTradeNo + "' or trade_no = '" + trade_no + "'";
 					Log.record("[GROUP CRONTAB] 更改用户属性SQL:" + sql, Log.INFO);
 					SGBU.save(sql);
-					
+				  
 					// 推送
 					int billID = Integer.parseInt(bill.get("id"));
 					Log.record("[GROUP CRONTAB] 推送订单的ID"+billID, Log.INFO);
