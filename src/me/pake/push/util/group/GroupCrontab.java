@@ -500,6 +500,8 @@ public class GroupCrontab {
 		Model SGM = new Model("standard_group_module");
 		Model SGU = new Model("standard_group_users");
 		Model SGBU = new Model("standard_group_business");
+		Model SGBI = new Model("standard_group_bill");
+		
 		Model U = new Model("user");
 		Map<String,String> userInfo = U.where("id = " + uid).find();
 		String trade_no = user.get("trade_no");
@@ -559,6 +561,11 @@ public class GroupCrontab {
 			Log.record("[GROUP CRONTAB] 更改module属性.SQL:" + sql, Log.INFO);
 			SGM.save(sql);
 		}
+		/* 删除相应的status为5的订单数据 */
+		sql = "trade_no = '" + trade_no + "' and status = " + StandardGroupBill.STATUS_APPLYING;
+		Log.record("[GROUP CRONTAB] 删除指定的订单。SQL:" + sql, Log.INFO);
+		SGBI.where(sql).delete();
+
 		// 微信推送.
 		try {
 			Thread.sleep(5000);
