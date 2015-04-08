@@ -69,6 +69,9 @@ public class WechatPush extends PushAbstract{
 		case PushInterface.PUSH_TYPE_LIKE_ACTIVITY_PUSH:
 				this.pushTypeLikeActivityPush();
 			break;
+		case PushInterface.PUSH_TYPE_RD_LIKE_ACTIVITY_PUSH:
+				this.pushTypeRdLikeActivityPush();
+			break;
 		case PushInterface.PUSH_TYPE_GROUP_CRONTAB:
 				new GroupCrontab(this);
 			break;
@@ -574,6 +577,105 @@ public class WechatPush extends PushAbstract{
 			/* Dispose the TPL variables */			
 			int currentUid = Integer.parseInt(lrs.get(i).get("uid"));
 			url 	   = SiteConf.BASH_URL + "/rednews/Web/LikeActivity/other/uid/" + ownerUid + "/";
+			msg.setUrl(url);
+			msg.setFisrtValue(CN.REDNEWS_LIKE_TITLE_OTHER);
+			
+			try {
+				Thread.sleep(1000);
+			} catch (InterruptedException e) {
+				e.printStackTrace();
+			}
+			
+			hp = new HttpPost();
+			msg.setTouser(user.get("openid"));
+			requestBodies = new StringEntity(msg.getJSON(), Consts.UTF_8);
+			response = null;
+			Log.record("Receiving the pushtype " + PushInterface.PUSH_TYPE_LIKE_ACTIVITY_PUSH + ", to user id: " + ownerUid + " title :" + msg.getFisrtValue() + "link :" + msg.getUrl(), Log.INFO);
+			try {
+				String access_token = this.getAccessToken();
+				if(!DeveloperConf.PUSH_DEBUG) {
+					response = hp.post(WechatConf.HOST, WechatConf.TPL_MSG_URI + "?access_token=" + access_token, requestBodies);
+//					Log.record(response, Log.INFO);
+				}
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+			
+		}
+	}
+	
+	/**
+	 * Push wechat msg to users while the like_count up to limit count, for the rednews CMS.
+	 * 
+	 * @return void
+	 */
+	private void pushTypeRdLikeActivityPush() {
+		/* Get Params */
+		if(!this.filterTypeLikeActivityPushParams()) return;
+		
+		/* Get Datas */
+		int likeActivityID							= Integer.parseInt(this.urlFilter.get("like_activity_id"));
+		Model LR									= new Model("rd_like_record");
+		List<Map<String, String>> lrs			 	= null;
+		Model U										= new Model("user");
+		Map<String, String> user					= null;
+		Model LA									= new Model("rd_like_activity");
+		Map<String, String> la						= LA.where("id = '" + likeActivityID + "'").find();
+		int ownerUid								= Integer.parseInt(la.get("uid"));
+		int recruitID								= Integer.parseInt(la.get("post_id"));
+		Model P										= new Model("rd_post");
+		Map<String, String> post					= null;
+		post										= P.where("id = '" + recruitID + "'").find();
+		String info									= post.get("attr_fields");
+		JSONObject infoJSON							= null;
+		String startTime							= null;
+		
+		try {
+			infoJSON 								= new JSONObject(info);
+			startTime								= infoJSON.getString("start_time");
+		} catch (JSONException e1) {
+			e1.printStackTrace();
+		}
+		
+		lrs	= LR.where("like_activity_id = '" + likeActivityID + "'").select();
+		WishListWechatJsonMessage msg = new WishListWechatJsonMessage();
+		msg.setKeynote1Value(CN.REDNEWS_LIKE);
+		msg.setRemarkValue(CN.REDNEWS_LIKE_LINK);
+		msg.setKeynote2Value(startTime);
+		
+		/* push */
+		String url 	   = SiteConf.BASH_URL + "/rednews/RdWeb/LikeActivity/my/uid/" + ownerUid + "/";
+		msg.setUrl(url);
+		msg.setFisrtValue(CN.REDNEWS_LIKE_TITLE_MY);
+		try {
+			Thread.sleep(1000);
+		} catch (InterruptedException e) {
+			e.printStackTrace();
+		}
+		
+		HttpPost hp = new HttpPost();
+		user = U.where("id = '" + ownerUid + "'").find();
+		msg.setTouser(user.get("openid"));
+		HttpEntity requestBodies = new StringEntity(msg.getJSON(), Consts.UTF_8);
+		String response = null;
+		Log.record("Receiving the pushtype " + PushInterface.PUSH_TYPE_LIKE_ACTIVITY_PUSH + ", to user id: " + ownerUid + " title :" + msg.getFisrtValue() + "link :" + msg.getUrl(), Log.INFO);
+		try {
+			String access_token = this.getAccessToken();
+			if(!DeveloperConf.PUSH_DEBUG) {
+				response = hp.post(WechatConf.HOST, WechatConf.TPL_MSG_URI + "?access_token=" + access_token, requestBodies);
+//				Log.record(response, Log.INFO);
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		
+		for(int i = 0; i < lrs.size(); i++) {
+
+			user = U.where("id = '" + Integer.parseInt(lrs.get(i).get("uid")) + "'").find();
+
+			/* Dispose the TPL variables */			
+			int currentUid = Integer.parseInt(lrs.get(i).get("uid"));
+			url 	   = SiteConf.BASH_URL + "/rednews/RdWeb/LikeActivity/other/uid/" + ownerUid + "/";
 			msg.setUrl(url);
 			msg.setFisrtValue(CN.REDNEWS_LIKE_TITLE_OTHER);
 			

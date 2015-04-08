@@ -103,4 +103,9 @@ public interface PushInterface {
 	 */
 	public static int PUSH_TYPE_GROUP_CRONTAB = 0x0016;
 	
+	/**
+	 * @since 0.7.0
+	 */
+	public static int PUSH_TYPE_RD_LIKE_ACTIVITY_PUSH = 0x0017;
+	
 }
