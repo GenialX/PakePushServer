@@ -424,7 +424,8 @@ public class WechatPush extends PushAbstract{
 		SimpleDateFormat formatter 					= new SimpleDateFormat("Y-M-d H:m:s");
 	 	String now 									= formatter.format(new Date());
 	 	Model SGBU									= new Model("standard_group_business");
-	 	Map<String,String> sgbu						= null;			
+	 	Map<String,String> sgbu						= null;		
+	 	Model Admin									= new Model("admin");
 
 
 		Log.record("接收到通知支付完成的消息，订单号:" + this.urlFilter.get("bill_id"), Log.INFO);
@@ -445,7 +446,7 @@ public class WechatPush extends PushAbstract{
 		String groupPaidTitle = "您报名的整点趴“" + sgbu.get("title") + "”全部人员支付完毕，将于" + bill.get("start_time") + "在" + sgbu.get("location") + "进行，赶紧梳妆打扮准备出发吧。该活动的验证码为：" + bill.get("trade_no") + ",商家验证后即可消费。";
 		msg.setFisrtValue(groupPaidTitle);
 		
-		/* push */
+		/* push to users*/
 		for(int i = 0; i < users.size(); i++) {
 			
 			Model UM = new Model("user");
@@ -471,6 +472,33 @@ public class WechatPush extends PushAbstract{
 			}
 			
 		}
+		
+		/* push to business */
+		int adminID = Integer.parseInt(bill.get("admin_id"));
+		Map<String, String> admin = Admin.where("id = " + adminID).find();
+		String openID = admin.get("openid");
+		groupPaidTitle = "恭喜，一波小伙伴组队成功，已经准备出发，将于" + bill.get("start_time") + "到店消费，准备好迎接他们吧！嘿嘿。";
+		msg.setFisrtValue(groupPaidTitle);
+
+		try {
+			Thread.sleep(1000);
+		} catch (InterruptedException e) {
+			e.printStackTrace();
+		}
+		HttpPost hp = new HttpPost();
+		msg.setTouser(openID);
+		HttpEntity requestBodies = new StringEntity(msg.getJSON(), Consts.UTF_8);
+		String response = null;
+		try {
+			String access_token = this.getAccessToken();
+			if(!DeveloperConf.PUSH_DEBUG) {
+				response = hp.post(WechatConf.HOST, WechatConf.TPL_MSG_URI + "?access_token=" + access_token, requestBodies);
+//				Log.record(response, Log.INFO);
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		
 		
 	}
 	
